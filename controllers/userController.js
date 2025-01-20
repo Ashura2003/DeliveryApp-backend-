@@ -4,7 +4,56 @@ const bcrypt = require("bcrypt");
 const validator = require("validator");
 
 // User Login
-const userLogin = async (req, res) => {};
+const userLogin = async (req, res) => {
+
+    const { email, password } = req.body;
+    
+    try {
+        if (!email || !password) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Please fill all the fields" });
+        }
+
+
+    
+        const user = await userModel.findOne({ email: email });
+    
+        if (!user) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Invalid Credentials" });
+        }
+    
+        const isMatch = await bcrypt.compare(password, user.password);
+    
+        if (!isMatch) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Invalid Credentials" });
+        }
+    
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+        });
+    
+        res.status(200).json({
+        success: true,
+        message: "User logged in successfully",
+        token: token,
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            phone: user.phone,
+            cartData: user.cartData,
+        },
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
 
 // User Register
 const userRegister = async (req, res) => {
@@ -26,8 +75,14 @@ const userRegister = async (req, res) => {
     }
 
     // Validator for email and strong password
-    if (!validator.isEmail) {
+    if (!validator.isEmail(email)) {
       return res.status(400).json({ success: false, message: "Invalid Email" });
+    }
+
+    if (!validator.isMobilePhone(phone)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Phone Number" });
     }
 
     if (password.length < 8) {
@@ -48,11 +103,11 @@ const userRegister = async (req, res) => {
       password: hashedPassword,
     });
 
-    await newUser.save();
+    const user = await newUser.save();
 
     res
       .status(201)
-      .json({ success: true, message: "User registered successfully" });
+      .json({ success: true, message: "User registered successfully", userData: user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
