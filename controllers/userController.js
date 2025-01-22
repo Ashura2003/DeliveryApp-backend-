@@ -106,7 +106,7 @@ const userRegister = async (req, res) => {
     const user = await newUser.save();
 
     res
-      .status(201)
+      .status(200)
       .json({ success: true, message: "User registered successfully", userData: user });
   } catch (error) {
     console.log(error);
