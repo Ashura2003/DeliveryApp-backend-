@@ -5,54 +5,51 @@ const validator = require("validator");
 
 // User Login
 const userLogin = async (req, res) => {
+  const { email, password } = req.body;
 
-    const { email, password } = req.body;
-    
-    try {
-        if (!email || !password) {
-        return res
-            .status(400)
-            .json({ success: false, message: "Please fill all the fields" });
-        }
-
-
-    
-        const user = await userModel.findOne({ email: email });
-    
-        if (!user) {
-        return res
-            .status(400)
-            .json({ success: false, message: "Invalid Credentials" });
-        }
-    
-        const isMatch = await bcrypt.compare(password, user.password);
-    
-        if (!isMatch) {
-        return res
-            .status(400)
-            .json({ success: false, message: "Invalid Credentials" });
-        }
-    
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-        });
-    
-        res.status(200).json({
-        success: true,
-        message: "User logged in successfully",
-        token: token,
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            phone: user.phone,
-            cartData: user.cartData,
-        },
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+  try {
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please fill all the fields" });
     }
+
+    const user = await userModel.findOne({ email: email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Credentials" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      token: token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        cartData: user.cartData,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
 
 // User Register
@@ -105,9 +102,11 @@ const userRegister = async (req, res) => {
 
     const user = await newUser.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "User registered successfully", userData: user });
+    res.status(200).json({
+      success: true,
+      message: "User registered successfully",
+      userData: user,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -115,13 +114,55 @@ const userRegister = async (req, res) => {
 };
 
 // User Profile
-const userProfile = async (req, res) => {};
+const userProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.id).select("-password");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, user: user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
 
 // Edit User Profile
-const editUserProfile = async (req, res) => {};
+const editUserProfile = async (req, res) => {
+  const { username, email, phone } = req.body;
+
+  try {
+    const user = await userModel.findById(req.user.id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    user.username = username;
+    user.email = email;
+    user.phone = phone;
+
+    await user.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "User updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
 
 module.exports = {
   userLogin,
   userRegister,
+  userProfile,
+  editUserProfile,
   userProfile,
 };
