@@ -1,4 +1,3 @@
-
 const userModel = require("../models/userModel");
 
 // Add items to user cart
@@ -69,7 +68,7 @@ const removeFromCart = async (req, res) => {
 
 // Fetch User Cart Data
 const getCart = async (req, res) => {
-  try {
+  try { 
     let userData = await userModel.findOne({ _id: req.user.id });
     let cartData = await userData.cartData;
 

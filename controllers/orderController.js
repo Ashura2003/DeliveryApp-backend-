@@ -116,7 +116,7 @@ const userOrders = async (req, res) => {
     const orders = await orderModel.find({ userId: req.user.id });
     res.status(200).json({
       success: true,
-      data: orders,
+      orders: orders,
     });
   } catch (error) {
     console.log(error);
