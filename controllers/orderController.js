@@ -80,22 +80,26 @@ const placeOrder = async (req, res) => {
 };
 
 const verifyOrder = async (req, res) => {
-  const {orderId, sucess} = req.body;
+  const { orderId, success } = req.body;
+
+  console.log(orderId);
+  console.log(success);
+
+  console.log(req.body);
 
   try {
-    if(success == true){
-      await orderModel.findByIdAndUpdate(orderId,{payment: true});
+    if (success) {
+      await orderModel.findByIdAndUpdate(orderId, { payment: true });
       res.status(200).json({
         success: true,
         message: "Order placed successfully",
       });
-    }
-    else{
+    } else {
       await orderModel.findByIdAndDelete(orderId);
-      res.status(204).json({
-        sucess: false,
-        message: "Order failed"
-      })
+      res.status(400).json({
+        success: false,
+        message: "Order failed",
+      });
     }
   } catch (error) {
     console.error(error);
@@ -104,6 +108,23 @@ const verifyOrder = async (req, res) => {
       message: error.message || "Internal Server Error",
     });
   }
-}
+};
 
-module.exports = { placeOrder, verifyOrder };
+// User orders for frontend
+const userOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({ userId: req.user.id });
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+module.exports = { placeOrder, verifyOrder, userOrders };
