@@ -127,4 +127,45 @@ const userOrders = async (req, res) => {
   }
 };
 
-module.exports = { placeOrder, verifyOrder, userOrders };
+// Listing orders for admin
+const listOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({});
+    res.status(200).json({
+      success: true,
+      orders: orders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+const updateStatus = async (req, res) => {
+  try {
+    await orderModel.findByIdAndUpdate(req.body.orderId, {
+      status: req.body.status,
+    });
+    res.status(200).json({
+      success: true,
+      message: "Order status updated",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+module.exports = {
+  placeOrder,
+  verifyOrder,
+  userOrders,
+  listOrders,
+  updateStatus,
+};
